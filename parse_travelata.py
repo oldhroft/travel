@@ -18,6 +18,7 @@ if __name__ == "__main__":
     )
 
     travelata_temp_url = "https://travelata.ru/tury/egypt#?fromCity=2&dateFrom=27.02.2023&dateTo=27.02.2023&nightFrom=3&nightTo=10&adults=2&hotelClass=all&meal=all&sid=bsxr1619np&sort=priceUp&f_good=true&toCountries=29"
+    
 
     logger.info(f"Travelling to {travelata_temp_url}")
     browser.get(travelata_temp_url)
