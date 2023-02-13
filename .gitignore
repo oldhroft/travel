@@ -1,0 +1,7 @@
+*.json
+*.html
+.python-version
+*.ipynb
+urls.txt
+*.pyc
+__pycache__

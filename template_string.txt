@@ -1,0 +1,1 @@
+https://travelata.ru/tury#?fromCity=2&dateFrom={date_from}&dateTo={date_to}&nightFrom=3&nightTo=10&adults=2&hotelClass=all&meal=all&sort=priceUp&f_good=true&toCountries={country}
