@@ -7,3 +7,6 @@ urls.txt
 __pycache__
 .DS_Store
 *.xlsx
+airflow*
+logs
+webserver_config.py

@@ -294,3 +294,4 @@ def extract_attributes_travelata(data: dict) -> dict:
         **attributes,
         **distances,
     }
+
