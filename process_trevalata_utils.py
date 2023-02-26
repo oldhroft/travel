@@ -51,6 +51,7 @@ def parse_func_wrapper(website: str, time_fmt: str = "%Y-%m-%dT%H:%M:%SZ") -> Ca
 
 import os
 from typing import List
+import json
 
 
 def update_dicts(dicts: List[dict], **kwargs) -> List[dict]:
@@ -58,14 +59,20 @@ def update_dicts(dicts: List[dict], **kwargs) -> List[dict]:
 
 
 def load_process_html_cards(
-    path: str, get_cards: Callable, parse_card: Callable
+    path: str, get_cards: Callable, parse_card: Callable, path_to_meta: str
 ) -> list:
     with open(path, "r", encoding="utf-8") as file:
         content = file.read()
+
+    with open(path_to_meta, "r", encoding="utf-8") as file:
+        meta = json.load(file)
+
     soup = BeautifulSoup(content, "html.parser")
     cards = get_cards(soup)
     result = list(map(parse_card, cards))
-    result_with_meta = update_dicts(result, path=path, filename=os.path.basename(path))
+    result_with_meta = update_dicts(
+        result, parser_id=meta["parsing_id"], path=path, filename=os.path.basename(path)
+    )
     return result_with_meta
 
 
@@ -234,14 +241,14 @@ def extract_attributes_travelata(data: dict) -> dict:
     )
     num_nights = int(num_nights)
     num_people = int(num_people)
-    is_flight_included = flight == "включено"
+    is_flight_included = flight == "включен"
 
     if data["reviews"] is not None:
         reviews = re.match("\d+", data["reviews"]).group(0)
     else:
         reviews = 0
 
-    price = float(re.match("от (\d+)", data["price"]).groups()[0].replace(" ", ""))
+    price = float(re.match("от ([\s\d]+)", data["price"]).groups()[0].replace(" ", ""))
     if data["orders_count"] is not None:
         orders_count = re.match(
             r"Забронировано (\d+) раз", data["orders_count"]

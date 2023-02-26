@@ -19,11 +19,13 @@ def dump_json(data: list, path: str):
         json.dump(data, file)
 
 if __name__ == "__main__":
-    files = glob.glob("./data_html/collected_hotels_*.html")
+    files = glob.glob("data_html/collected_hotels_*.html")
     result = []
     for file in files:
+        path_to_meta = file.split(".")[0] + ".json"
         result_file = load_process_html_cards(
-            file, get_cards_travelata, parse_hotel_card_travelata
+            file, get_cards_travelata, parse_hotel_card_travelata,
+            path_to_meta
         )
         result.extend(result_file)
     
@@ -31,5 +33,5 @@ if __name__ == "__main__":
     dump_json(result, "./data/results/result_travelata_raw.json")
     result_extracted = list(map(extract_attributes_travelata, result))
     dump_json(result_extracted, "./data/results/result_travelata.json")
-    DataFrame(result_extracted).to_excel("hotels.xlsx")
+    DataFrame(result_extracted).to_excel("hotels1.xlsx")
     

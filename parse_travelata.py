@@ -9,6 +9,7 @@ import time
 import datetime
 import yaml
 import json
+import uuid
 
 import logging
 
@@ -25,8 +26,23 @@ def hover_and_right_click(browser:  webdriver.Chrome, element):
 def parse_country(
     browser: webdriver.Chrome,
     country_code: str,
+    night_from: int,
+    night_to: int,
+    time_fmt: str='%Y-%m-%dT%H:%M:%SZ'
 ) -> None:
-    logger.info(f"Parsing {country_code}")
+    
+    parsing_id = str(uuid.uuid4())
+    
+    # TODO unify for different parsers
+    meta = {
+        "country_code": country_code,
+        "night_from": night_from,
+        "night_to": night_to,
+        "parsing_started": datetime.datetime.now().strftime(time_fmt),
+        "parsing_id": parsing_id,
+    }
+
+    logger.info(f"Parsing {country_code} nights {night_from} to {night_to}")
     with open("template_string.txt", "r") as ts:
         template_url = ts.read()
 
@@ -34,10 +50,14 @@ def parse_country(
     fmt = "%d.%m.%Y"
     date_from = (today + datetime.timedelta(days=1)).strftime(fmt)
     date_to = (today + datetime.timedelta(days=31)).strftime(fmt)
+    meta["date_from"] = date_from
+    meta["date_to"] = date_to
 
     url = template_url.format(
-        country=country_code, date_from=date_from, date_to=date_to
+        country=country_code, date_from=date_from, date_to=date_to,
+        night_from=night_from, night_to=night_to
     )
+    meta["search_url"] = url
     logger.info(f"Travelling to {url}")
     browser.get(url)
     logger.info("Sleeping")
@@ -58,15 +78,14 @@ def parse_country(
             button.click()
 
     logger.info("Sleeping")
-    time.sleep(20)
+    time.sleep(10)
     logger.info("Waking up")
 
     logger.info("Scrolling")
-    max_iter = 20
     old_height = 0
     delta = 0.25 * browser.execute_script("return document.body.scrollHeight")
     second_chance = True
-    for i in range(max_iter):
+    while True:
         browser.execute_script(
             f"window.scrollTo(0, document.body.scrollHeight - {delta});"
         )
@@ -95,22 +114,23 @@ def parse_country(
 
     elements = browser.find_elements(By.CSS_SELECTOR, "a.serpHotelCard__title.goToHotel")
 
-    hrefs = []
     for element in elements:
         hover_and_right_click(browser, element)
         time.sleep(.2)
         href = element.get_attribute("href")
-        hrefs.append(href)
         logger.info(f"extracting url {href}")
     
-    logger.info("Dumping links")
-    with open(f"./data/links/links_{country_code}.json", "w") as file:
-        json.dump(hrefs, file)
+    meta["parsing_ended"] = datetime.datetime.now().strftime(time_fmt)
 
     logger.info("Downloading page source")
     content = browser.page_source
-    with open(f"data_html/collected_hotels_{country_code}.html", "w") as file:
+    fp = f"data_html/collected_hotels_{country_code}_{night_from}to{night_to}.html"
+    with open(fp, "w") as file:
         file.write(content)
+        
+    meta["path"] = fp
+    with open(f"data_html/collected_hotels_{country_code}_{night_from}to{night_to}.json", "w") as file:
+        json.dump(meta, file)
 
 
 if __name__ == "__main__":
@@ -124,5 +144,6 @@ if __name__ == "__main__":
         meta = yaml.safe_load(file)
 
     codes = list(meta["countries"].values())
+
     for code in codes:
-        parse_country(browser, country_code=code)
+        parse_country(browser, country_code=code, night_from=7, night_to=7)
